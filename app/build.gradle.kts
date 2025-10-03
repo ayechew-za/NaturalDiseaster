@@ -2,6 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.kapt")  // ဒီလိုပြောင်းသုံးပါ
+         id("com.google.dagger.hilt.android")
+
 }
 
 android {
@@ -40,7 +43,17 @@ android {
 }
 
 dependencies {
+// Hilt core dependencies
 
+
+// Hilt navigation for Jetpack Compose
+    implementation ("androidx.hilt:hilt-navigation-compose:1.1.0")
+
+// Jetpack Compose dependencies (if not added)
+
+
+    implementation("com.google.dagger:hilt-android:2.48.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.48.1")
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")

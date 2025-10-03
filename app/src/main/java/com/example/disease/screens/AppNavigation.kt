@@ -6,35 +6,43 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.weatherapp.ui.screen.TopAppBarWithBackButton
+import com.example.disease.navigation.Screen
+import com.example.disease.data.repo.AnnouncementRepository
+import com.example.disease.data.network.RetrofitClient
+import com.example.weatherapp.ui.screen.AnnounceUI
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
+    val repository = AnnouncementRepository(RetrofitClient.apiService)
+
     NavHost(
         navController = navController,
-        startDestination = "home"  // ပထမဆုံး Home Screen ကနေစမယ်
-    ) {
+        startDestination = Screen.Home.route
+    )
+    {
         // Home Screen
-        composable("home") {
+        composable(Screen.Home.route) {
             Home(
                 onAnnounceClick = {
-                    navController.navigate("announceui")  // Announcement Screen ကိုသွားမယ်
+                    navController.navigate(Screen.AnnounceUI.route)
                 },
                 navController = navController
             )
         }
 
         // Announcement Screen
-        composable("announceui") {
-            TopAppBarWithBackButton(
-                title = "မြန်မာနိုင်ငံလတ်တလောရာသီဥတုအခြေအနေ",
-                onBackClick = { navController.popBackStack() }  // နောက်ပြန်သွားမယ်
-            )
+
+        composable(Screen.AnnounceUI.route) {
+            AnnounceUI(navController = navController)
         }
+
+        // other routes...
+
+
 
         // Weather Condition Detail Screen
         composable(
-            "weaconditiondetail/{newsId}",
+            Screen.WeatherConditionDetail.route,
             arguments = listOf(navArgument("newsId") { type = NavType.StringType })
         ) { backStackEntry ->
             val newsId = backStackEntry.arguments?.getString("newsId")
@@ -43,5 +51,38 @@ fun AppNavigation(navController: NavHostController) {
                 newsId = newsId
             )
         }
+
+        // Category Detail Screen (အသစ်ထည့်မယ်)
+        composable(
+            Screen.CategoryDetail.route,
+            arguments = listOf(
+                navArgument("categoryId") { type = NavType.StringType },
+                navArgument("type") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.getString("categoryId") ?: ""
+            val type = backStackEntry.arguments?.getString("type") ?: ""
+
+            CategoryDetailScreen(
+                navController = navController,
+                categoryId = categoryId,
+                type = type,
+                repository = repository
+            )
+        }
+
+
+        composable(
+            Screen.PostDetail.route,
+            arguments = listOf(navArgument("postId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+            PostDetailScreen(postId = postId, navController = navController)
+        }
     }
 }
+
+
+
+
+// Category Detail Screen (အသစ်ထည့်မယ်)

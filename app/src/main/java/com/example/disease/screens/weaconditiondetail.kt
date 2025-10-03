@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.List
-//import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -229,8 +228,11 @@ fun WeaconditiondetailContent(newsItem: NewsItem, modifier: Modifier = Modifier)
                 }
             }
 
+            // Strip HTML tags here before displaying description
+            val cleanDescription = stripHtmlTags(newsItem.description)
+
             Text(
-                text = newsItem.description.ifEmpty { "ဤသတင်းတွင် ရှင်းလင်းချက်မရှိပါ။" },
+                text = cleanDescription.ifEmpty { "ဤသတင်းတွင် ရှင်းလင်းချက်မရှိပါ။" },
                 fontSize = 16.sp,
                 color = Color(0xFF333333),
                 lineHeight = 24.sp,
@@ -239,6 +241,11 @@ fun WeaconditiondetailContent(newsItem: NewsItem, modifier: Modifier = Modifier)
             )
         }
     }
+}
+
+// Helper function to remove HTML tags
+fun stripHtmlTags(text: String): String {
+    return text.replace(Regex("<[^>]*>"), "").trim()
 }
 
 private suspend fun fetchNewsDetailFromApi(newsId: String): NewsItem? = withContext(Dispatchers.IO) {

@@ -4,24 +4,23 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.disease.data.AnnouncementResponse
 import com.example.weatherapp.ui.viewmodel.AnnouncementUiState
 import com.example.weatherapp.ui.viewmodel.AnnouncementViewModel
 
 @Composable
-fun AnnouncementScreen() {
+fun AnnounceUI(navController: NavController) {
     val viewModel: AnnouncementViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 
@@ -38,6 +37,7 @@ fun AnnouncementScreen() {
                     onRetry = viewModel::retry
                 )
             }
+
             is AnnouncementUiState.Error -> {
                 ErrorState(
                     message = (uiState as AnnouncementUiState.Error).message,
@@ -109,8 +109,6 @@ fun AnnouncementContent(response: AnnouncementResponse, onRetry: () -> Unit) {
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-
-
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -120,8 +118,6 @@ fun AnnouncementContent(response: AnnouncementResponse, onRetry: () -> Unit) {
             )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-
-
                 announcement.text?.let {
                     Text(
                         text = it,
@@ -130,7 +126,6 @@ fun AnnouncementContent(response: AnnouncementResponse, onRetry: () -> Unit) {
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                 }
-
             }
         }
     }
@@ -146,22 +141,16 @@ private fun formatDate(dateString: String?): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
-
-
-
 fun TopAppBarWithBackButton(
     title: String,
+    navController: NavController,
     onBackClick: () -> Unit
-)
-
-{
+) {
     Column {
         TopAppBar(
             title = {
                 Text(
                     text = title,
-                //    style = MaterialTheme.typography.titleLarge,
                     color = Color.Black,
                     fontSize = 14.sp
                 )
@@ -176,17 +165,11 @@ fun TopAppBarWithBackButton(
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor =Color(0xffEEF5FE
-        )
+                containerColor = Color(0xffEEF5FE)
             )
         )
 
-        AnnouncementScreen()
-
-
+        // Place AnnounceUI BELOW the TopAppBar
+        AnnounceUI(navController = navController)
     }
-
-
-
-
 }

@@ -61,9 +61,6 @@ fun CategoryListScreen() {
             color = Color(0xFF1A237E)
         )
 
-        selectedCategory.value?.let { category ->
-            SelectedCategoryBox(selectedCategory = category)
-        }
 
         if (isLoading.value) {
             Box(
