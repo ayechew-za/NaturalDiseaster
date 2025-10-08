@@ -152,7 +152,13 @@ fun HorizontalScroll(
                 }
             }
 
-            WeatherCondition(navController = navController)
+            WeatherCondition(
+                navController = navController,
+                onNewClick = {
+                    navController.navigate("latestNew")
+                }
+            )
+
 
             if (selectedCategory != null) {
                 Spacer(modifier = Modifier.height(180.dp))

@@ -11,6 +11,9 @@ import com.example.disease.data.repo.AnnouncementRepository
 import com.example.disease.data.network.RetrofitClient
 import com.example.weatherapp.ui.screen.AnnounceUI
 
+import com.example.disease.screens.LatestNew
+
+
 @Composable
 fun AppNavigation(navController: NavHostController) {
     val repository = AnnouncementRepository(RetrofitClient.apiService)
@@ -30,7 +33,20 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
+
+        composable(Screen.Weathercondition.route) {
+            WeatherCondition(
+                onNewClick = {
+                    navController.navigate(Screen.LatestNew.route)
+                },
+                navController = navController
+            )
+        }
         // Announcement Screen
+
+        composable(Screen.LatestNew.route) {
+        LatestNew(navController = navController)
+        }
 
         composable(Screen.AnnounceUI.route) {
             AnnounceUI(navController = navController)

@@ -6,6 +6,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +25,8 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
+import com.example.disease.data.repo.AnnouncementRepository
+import com.example.disease.navigation.Screen
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.sin
@@ -34,7 +38,7 @@ fun Home(
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val repository = com.example.disease.data.repo.AnnouncementRepository(
+    val repository = AnnouncementRepository(
         com.example.disease.data.network.RetrofitClient.apiService
     )
 
@@ -43,8 +47,16 @@ fun Home(
         gesturesEnabled = true,
         drawerContent = {
             NavigationDrawer(
-                onItemSelected = { item ->
-                    println("Selected: $item")
+                repository = repository,
+                onItemSelected = { categoryName, type ->
+                    println("Selected: $categoryName, Type: $type")
+                    // Use existing navigation route from HorizontalScroll
+                    navController.navigate(
+                        Screen.CategoryDetail.createRoute(
+                            categoryId = "", // You might need to pass category ID instead of name
+                            type = type ?: "post"
+                        )
+                    )
                     scope.launch {
                         drawerState.close()
                     }
@@ -56,7 +68,13 @@ fun Home(
                 }
             )
         }
-    ) {
+    )
+
+
+
+
+
+    {
         Surface(
             modifier = Modifier
                 .fillMaxSize()
@@ -93,12 +111,10 @@ fun Home(
                                     .size(24.dp, 30.dp)
                                     .align(Alignment.CenterStart)
                             ) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data("file:///android_asset/menu_icon.svg")
-                                        .decoderFactory(SvgDecoder.Factory())
-                                        .build(),
-                                    contentDescription = "Menu Icon"
+                                Icon(
+                                    imageVector = Icons.Default.Menu,
+                                    contentDescription = "Menu Icon",
+                                    tint = Color.White
                                 )
                             }
 
@@ -127,7 +143,7 @@ fun Home(
                                     shape = RoundedCornerShape(6.dp)
                                 )
                                 .clickable {
-                                    onAnnounceClick() // This will trigger navigation
+                                    onAnnounceClick()
                                 }
                         ) {
                             Row(modifier = Modifier.padding(5.dp)) {
@@ -196,7 +212,6 @@ fun Home(
     }
 }
 
-// Rest of your existing WaveBox and WaveBoxTop composables remain the same
 @Composable
 fun WaveBox(
     modifier: Modifier = Modifier,

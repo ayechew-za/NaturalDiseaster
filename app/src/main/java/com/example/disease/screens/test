@@ -1,0 +1,622 @@
+package com.example.disease.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.svg.SvgDecoder
+
+@Composable
+fun NavigationDrawerScreen(
+    repository: com.example.disease.data.repo.AnnouncementRepository,
+    navController: NavController
+) {
+    var categories by remember { mutableStateOf<List<Category>?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var selectedCategory by remember { mutableStateOf<Category?>(null) }
+    var expandedSubcategories by remember { mutableStateOf<MutableSet<String>>(mutableSetOf()) }
+
+    LaunchedEffect(key1 = Unit) {
+        val result = repository.getCategories()
+        isLoading = false
+        if (result.isSuccess) {
+            categories = result.getOrNull()?.data
+        } else {
+            error = result.exceptionOrNull()?.message
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Error: $error",
+                        color = Color.Red,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+            categories.isNullOrEmpty() -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No categories found",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+            else -> {
+                NavigationDrawerContent(
+                    categories = categories!!,
+                    selectedCategory = selectedCategory,
+                    expandedSubcategories = expandedSubcategories,
+                    onCategorySelected = { category ->
+                        selectedCategory = if (selectedCategory?.id == category.id) {
+                            null
+                        } else {
+                            category
+                        }
+                        expandedSubcategories.clear()
+                    },
+                    onExpandedChange = { subcategoryId ->
+                        val newSet = expandedSubcategories.toMutableSet()
+                        if (newSet.contains(subcategoryId)) {
+                            newSet.remove(subcategoryId)
+                        } else {
+                            newSet.add(subcategoryId)
+                        }
+                        expandedSubcategories = newSet
+                    },
+                    onTypeSelected = { category, type ->
+                        navController.navigate(
+                            Screen.CategoryDetail.createRoute(
+                                categoryId = category.id ?: "",
+                                type = type
+                            )
+                        )
+                        selectedCategory = null
+                        expandedSubcategories.clear()
+                    },
+                    onChildTypeSelected = { child, type ->
+                        navController.navigate(
+                            Screen.CategoryDetail.createRoute(
+                                categoryId = child.id ?: "",
+                                type = type
+                            )
+                        )
+                        selectedCategory = null
+                        expandedSubcategories.clear()
+                    },
+                    onCancelSelection = {
+                        selectedCategory = null
+                        expandedSubcategories.clear()
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NavigationDrawerContent(
+    categories: List<Category>,
+    selectedCategory: Category?,
+    expandedSubcategories: Set<String>,
+    onCategorySelected: (Category) -> Unit,
+    onExpandedChange: (String) -> Unit,
+    onTypeSelected: (Category, String) -> Unit,
+    onChildTypeSelected: (Category, String) -> Unit,
+    onCancelSelection: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        // Header
+        Text(
+            text = "အမျိုးအစားများ",
+            style = MaterialTheme.typography.headlineMedium.copy(fontSize = 18.sp),
+            color = Color(0xFF254365),
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
+
+        // Categories List
+        categories.forEach { category ->
+            NavigationCategoryItem(
+                category = category,
+                isSelected = selectedCategory?.id == category.id,
+                onCategoryClick = { onCategorySelected(category) }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Selected Category Details
+        if (selectedCategory != null) {
+            SelectedCategorySection(
+                selectedCategory = selectedCategory,
+                expandedSubcategories = expandedSubcategories,
+                onExpandedChange = onExpandedChange,
+                onTypeSelected = onTypeSelected,
+                onChildTypeSelected = onChildTypeSelected,
+                onCancel = onCancelSelection
+            )
+        }
+    }
+}
+
+@Composable
+fun NavigationCategoryItem(
+    category: Category,
+    isSelected: Boolean,
+    onCategoryClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+            .padding(vertical = 4.dp)
+            .background(
+                color = if (isSelected) Color(0xFFE3F2FD) else Color(0xFFF8F9FA),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = if (isSelected) Color(0xFF2196F3) else Color(0xFFE0E0E0),
+                shape = RoundedCornerShape(8.dp)
+            )
+    ) {
+        TextButton(
+            onClick = onCategoryClick,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = Color(0xFF254365),
+                containerColor = Color.Transparent
+            )
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Category Icon
+                if (!category.icon.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(category.icon)
+                            .decoderFactory(SvgDecoder.Factory())
+                            .build(),
+                        contentDescription = category.name,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                } else {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data("file:///android_asset/one.svg")
+                            .decoderFactory(SvgDecoder.Factory())
+                            .build(),
+                        contentDescription = "Default Icon",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+
+                // Category Name
+                Text(
+                    text = category.name ?: "Unknown",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                // Arrow Icon
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "Select",
+                    tint = Color(0xFF254365),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SelectedCategorySection(
+    selectedCategory: Category,
+    expandedSubcategories: Set<String>,
+    onExpandedChange: (String) -> Unit,
+    onTypeSelected: (Category, String) -> Unit,
+    onChildTypeSelected: (Category, String) -> Unit,
+    onCancel: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFF7F8FD))
+                .padding(16.dp)
+        ) {
+            // Title row with cancel button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = selectedCategory.name ?: "Unknown",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontSize = 16.sp),
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+
+                // Cancel button
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Cancel",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { onCancel() },
+                    tint = Color.Gray
+                )
+            }
+
+            // Main category selection
+            NavigationTypeSelectionRow(
+                category = selectedCategory,
+                showIcon = true,
+                onTypeSelected = { type -> onTypeSelected(selectedCategory, type) }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Children categories (subcategories)
+            val children = selectedCategory.children ?: emptyList()
+            if (children.isNotEmpty()) {
+                Text(
+                    text = "အမျိုးအစားခွဲများ:",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF666666),
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp)
+                ) {
+                    items(children) { child ->
+                        NavigationSubcategoryItem(
+                            child = child,
+                            isExpanded = expandedSubcategories.contains(child.id),
+                            onExpandedChange = { onExpandedChange(child.id ?: "") },
+                            onTypeSelected = { type -> onChildTypeSelected(child, type) }
+                        )
+                    }
+                }
+            } else {
+                Text(
+                    text = "အမျိုးအစားခွဲမရှိပါ။",
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+                    color = Color.Gray,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NavigationTypeSelectionRow(
+    category: Category,
+    showIcon: Boolean = false,
+    onTypeSelected: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.White)
+            .border(
+                width = 1.dp,
+                color = Color(0xFFCBE1FA),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (showIcon && !category.icon.isNullOrEmpty()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(category.icon)
+                        .decoderFactory(SvgDecoder.Factory())
+                        .build(),
+                    contentDescription = category.name,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+
+            Text(
+                text = "All ${category.name ?: "Types"}",
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp),
+                color = Color(0xFF333333),
+                modifier = Modifier.weight(1f)
+            )
+
+            NavigationTypeDropdown(onTypeSelected = onTypeSelected)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "အကြောင်းအရာအမျိုးအစားရွေးချယ်ပါ:",
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+            color = Color.Gray,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Post option
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFE3F2FD))
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFF2196F3),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .clickable { onTypeSelected("post") }
+                    .padding(horizontal = 12.dp, vertical = 10.dp)
+            ) {
+                Text(
+                    text = "သတင်းအသစ်များ",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
+                    color = Color(0xFF2196F3),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+
+            // Knowledge option
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFE8F5E8))
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFF4CAF50),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .clickable { onTypeSelected("knowledge") }
+                    .padding(horizontal = 12.dp, vertical = 10.dp)
+            ) {
+                Text(
+                    text = "ဗဟုသုတများ",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
+                    color = Color(0xFF4CAF50),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NavigationTypeDropdown(
+    onTypeSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        Icon(
+            imageVector = if (expanded) Icons.Default.ArrowDropDown else Icons.Default.KeyboardArrowRight,
+            contentDescription = "Select type",
+            modifier = Modifier
+                .size(24.dp)
+                .clickable { expanded = true },
+            tint = Color.Gray
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .background(Color.White)
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFFE0E0E0),
+                    shape = RoundedCornerShape(8.dp)
+                )
+        ) {
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        "သတင်းအသစ်များ",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp)
+                    )
+                },
+                onClick = {
+                    expanded = false
+                    onTypeSelected("post")
+                }
+            )
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        "ဗဟုသုတများ",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp)
+                    )
+                },
+                onClick = {
+                    expanded = false
+                    onTypeSelected("knowledge")
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun NavigationSubcategoryItem(
+    child: Category,
+    isExpanded: Boolean,
+    onExpandedChange: () -> Unit,
+    onTypeSelected: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        // Subcategory header row
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.White)
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFFCBE1FA),
+                    shape = RoundedCornerShape(8.dp)
+                )
+        ) {
+            TextButton(
+                onClick = onExpandedChange,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color(0xFF333333),
+                    containerColor = Color.Transparent
+                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    if (!child.icon.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(child.icon)
+                                .decoderFactory(SvgDecoder.Factory())
+                                .build(),
+                            contentDescription = child.name,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                    }
+
+                    Text(
+                        text = child.name ?: "-",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                        color = Color(0xFF333333),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.ArrowDropDown else Icons.Default.KeyboardArrowRight,
+                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        modifier = Modifier.size(24.dp),
+                        tint = Color.Gray
+                    )
+                }
+            }
+        }
+
+        // Type options that appear when subcategory is expanded
+        if (isExpanded) {
+            Spacer(modifier = Modifier.height(8.dp))
+            NavigationTypeSelectionRow(
+                category = child,
+                showIcon = false,
+                onTypeSelected = onTypeSelected
+            )
+        }
+    }
+}
+
+// Data classes (keep your existing data classes)
+data class Category(
+    val id: String? = null,
+    val name: String? = null,
+    val icon: String? = null,
+    val children: List<Category>? = null
+)
+
+// Screen sealed class (keep your existing Screen class)
+sealed class Screen(val route: String) {
+    object CategoryDetail : Screen("category_detail") {
+        fun createRoute(categoryId: String, type: String) = "category_detail/$categoryId/$type"
+    }
+}

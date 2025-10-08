@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.disease.navigation.Screen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -46,7 +47,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
-fun WeatherCondition(navController: NavController) {
+fun WeatherCondition(navController: NavController, onNewClick: () -> Unit,) {
     var newsList by remember { mutableStateOf<List<NewsItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
@@ -67,12 +68,14 @@ fun WeatherCondition(navController: NavController) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text("နောက်ဆုံးရသတင်းများ", color = Color.Black, fontSize = 14.sp)
+
+
             Text(
-                "အားလုံးဖတ်မယ်",
+                text = "အားလုံးဖတ်မယ်",
                 color = Color(0xff254365),
                 fontSize = 12.sp,
-                modifier = Modifier.clickable {
-                    // ဒီမှာ အားလုံးဖတ်မယ် လုပ်ဆောင်ချက်ရေးနိုင်တယ်
+                modifier = Modifier.clickable {  // ✅ Modifier ထဲမှာ သုံးရမယ်
+                    onNewClick()
                 }
             )
         }
@@ -131,6 +134,8 @@ fun WeatherCondition(navController: NavController) {
         }
     }
 }
+
+
 
 @Composable
 fun NewsItem(newsItem: NewsItem, onItemClick: () -> Unit) {

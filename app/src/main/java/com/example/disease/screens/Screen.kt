@@ -17,7 +17,7 @@ sealed class Screen(val route: String) {
     }
 
 
-
-
+object LatestNew : Screen("latestNew")
+object  Weathercondition : Screen("WeatherCondition")
 
 }
