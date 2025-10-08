@@ -1,5 +1,6 @@
 package com.example.disease.screens
 
+import SplashScreen
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -11,18 +12,19 @@ import com.example.disease.data.repo.AnnouncementRepository
 import com.example.disease.data.network.RetrofitClient
 import com.example.weatherapp.ui.screen.AnnounceUI
 
-import com.example.disease.screens.LatestNew
-
-
 @Composable
 fun AppNavigation(navController: NavHostController) {
     val repository = AnnouncementRepository(RetrofitClient.apiService)
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route
-    )
-    {
+        startDestination = Screen.Splash.route
+    ) {
+        // Splash Screen
+        composable(Screen.Splash.route) {
+            SplashScreen(navController = navController)
+        }
+
         // Home Screen
         composable(Screen.Home.route) {
             Home(
@@ -33,7 +35,6 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-
         composable(Screen.Weathercondition.route) {
             WeatherCondition(
                 onNewClick = {
@@ -42,19 +43,15 @@ fun AppNavigation(navController: NavHostController) {
                 navController = navController
             )
         }
-        // Announcement Screen
 
+        // Announcement Screen
         composable(Screen.LatestNew.route) {
-        LatestNew(navController = navController)
+            LatestNew(navController = navController)
         }
 
         composable(Screen.AnnounceUI.route) {
             AnnounceUI(navController = navController)
         }
-
-        // other routes...
-
-
 
         // Weather Condition Detail Screen
         composable(
@@ -68,7 +65,7 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // Category Detail Screen (အသစ်ထည့်မယ်)
+        // Category Detail Screen
         composable(
             Screen.CategoryDetail.route,
             arguments = listOf(
@@ -87,7 +84,6 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-
         composable(
             Screen.PostDetail.route,
             arguments = listOf(navArgument("postId") { type = NavType.StringType })
@@ -97,8 +93,3 @@ fun AppNavigation(navController: NavHostController) {
         }
     }
 }
-
-
-
-
-// Category Detail Screen (အသစ်ထည့်မယ်)

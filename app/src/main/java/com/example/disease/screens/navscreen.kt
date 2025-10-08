@@ -27,12 +27,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import java.nio.file.WatchEvent
 
 @Composable
 fun NavigationDrawer(
     modifier: Modifier = Modifier,
     repository: com.example.disease.data.repo.AnnouncementRepository,
-    onItemSelected: (String, String?) -> Unit = { _, _ -> }, // Accept category name and type
+    onItemSelected: (String, String?) -> Unit = { _, _ -> },
     onCloseDrawer: () -> Unit = {}
 ) {
     var categories by remember { mutableStateOf<List<com.example.disease.data.Category>?>(null) }
@@ -40,7 +42,7 @@ fun NavigationDrawer(
     var error by remember { mutableStateOf<String?>(null) }
     var expandedItem by remember { mutableStateOf<String?>(null) }
     var selectedCategory by remember { mutableStateOf<com.example.disease.data.Category?>(null) }
-    var showTypeSelection by remember { mutableStateOf(false) }
+    var expandedTypeDropdown by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = Unit) {
         val result = repository.getCategories()
@@ -56,16 +58,41 @@ fun NavigationDrawer(
         modifier = modifier
             .fillMaxHeight()
             .width(280.dp)
-            .background(Color.White)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .background(Color(0xffF7FBFE))
+
+
+
+    .verticalScroll(rememberScrollState())
+            .padding(top = 50.dp)
     ) {
-        Text(
-            text = "ပင်မစာမျက်နှာ",
-            style = MaterialTheme.typography.headlineMedium.copy(fontSize = 14.sp),
-            color = Color(0xFF254365),
-            modifier = Modifier.padding(bottom = 24.dp)
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data("file:///android_asset/logoo.png")
+                .build(),
+            contentDescription = "App Logo",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .padding(top = 24.dp)
+                .clip(RoundedCornerShape(8.dp))
         )
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Natural Disaster",
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+            fontSize = 18.sp,
+            color = Color.Black
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+
+
+        Divider(modifier = Modifier.fillMaxWidth())
+        // Add spacing after logo
+        Spacer(modifier = Modifier.height(24.dp))
+
+
 
         when {
             isLoading -> {
@@ -81,6 +108,7 @@ fun NavigationDrawer(
                     )
                 }
             }
+
             error != null -> {
                 Box(
                     modifier = Modifier
@@ -110,145 +138,148 @@ fun NavigationDrawer(
                 }
             }
             else -> {
-                categories!!.forEach { category ->
-                    val hasChildren = !category.children.isNullOrEmpty()
-                    val isExpanded = expandedItem == category.id
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    categories!!.forEach { category ->
+                        val hasChildren = !category.children.isNullOrEmpty()
+                        val isExpanded = expandedItem == category.id
 
-                    // Main Category Item
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .padding(vertical = 4.dp)
-                            .background(
-                                color = Color(0xFFE3F2FD),
-                                shape = RoundedCornerShape(6.dp)
-                            )
-                    ) {
-                        TextButton(
-                            onClick = {
-                                if (hasChildren) {
-                                    expandedItem = if (isExpanded) null else category.id
-                                } else {
-                                    selectedCategory = category
-                                    showTypeSelection = true
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 12.dp),
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = Color(0xFF254365),
-                                containerColor = Color.Transparent
-                            )
-                        )
-
-
-                        {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxSize()
-                            )
-
-
-                            {
-
-
-
-                                Text(
-                                    text = category.name ?: "Unknown",
-                                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp),
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(end = 8.dp),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-
-                                Icon(
-                                    imageVector = if (hasChildren) {
-                                        if (isExpanded) Icons.Filled.ArrowDropDown else Icons.Filled.KeyboardArrowRight
-                                    } else {
-                                        Icons.Filled.KeyboardArrowRight
-                                    },
-                                    contentDescription = if (hasChildren) {
-                                        if (isExpanded) "Expanded" else "Collapsed"
-                                    } else {
-                                        "Navigate"
-                                    },
-                                    tint = Color(0xFF254365),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    // Subcategories
-                    if (hasChildren && isExpanded) {
-                        Column(
+                        // Main Category Item
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+                                .height(56.dp)
+                                .background(
+                                    color = Color(0xFFE3F2FD),
+                                    shape = RoundedCornerShape(6.dp)
+                                )
                         ) {
-                            category.children!!.forEach { child ->
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp)
-                                        .padding(vertical = 4.dp)
-                                        .background(
-                                            color = Color(0xFFD6EAF8),
-                                            shape = RoundedCornerShape(6.dp)
-                                        )
+                            TextButton(
+                                onClick = {
+                                    if (hasChildren) {
+                                        expandedItem = if (isExpanded) null else category.id
+                                    } else {
+                                        selectedCategory = category
+                                        expandedTypeDropdown = true
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 12.dp),
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = Color(0xFF254365),
+                                    containerColor = Color.Transparent
+                                )
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxSize()
                                 ) {
-                                    TextButton(
-                                        onClick = {
-                                            selectedCategory = child
-                                            showTypeSelection = true
-                                        },
+                                    Text(
+                                        text = category.name ?: "Unknown",
+                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium
+                                        ),
                                         modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(horizontal = 12.dp),
-                                        colors = ButtonDefaults.textButtonColors(
-                                            contentColor = Color(0xFF1A5276),
-                                            containerColor = Color.Transparent
-                                        )
+                                            .weight(1f)
+                                            .padding(end = 8.dp),
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+
+                                    Icon(
+                                        imageVector = if (hasChildren) {
+                                            if (isExpanded) Icons.Filled.ArrowDropDown else Icons.Filled.KeyboardArrowRight
+                                        } else {
+                                            Icons.Filled.KeyboardArrowRight
+                                        },
+                                        contentDescription = if (hasChildren) {
+                                            if (isExpanded) "Expanded" else "Collapsed"
+                                        } else {
+                                            "Navigate"
+                                        },
+                                        tint = Color(0xFF254365),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Subcategories
+                        if (hasChildren && isExpanded) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                category.children!!.forEach { child ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(48.dp)
+                                            .background(
+                                                color = Color(0xFFD6EAF8),
+                                                shape = RoundedCornerShape(6.dp)
+                                            )
                                     ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.fillMaxSize()
+                                        TextButton(
+                                            onClick = {
+                                                selectedCategory = child
+                                                expandedTypeDropdown = true
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .padding(horizontal = 12.dp),
+                                            colors = ButtonDefaults.textButtonColors(
+                                                contentColor = Color(0xFF1A5276),
+                                                containerColor = Color.Transparent
+                                            )
                                         ) {
-                                            if (!child.icon.isNullOrEmpty()) {
-                                                AsyncImage(
-                                                    model = ImageRequest.Builder(LocalContext.current)
-                                                        .data(child.icon)
-                                                        .decoderFactory(SvgDecoder.Factory())
-                                                        .build(),
-                                                    contentDescription = child.name,
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.fillMaxSize()
+                                            ) {
+                                                if (!child.icon.isNullOrEmpty()) {
+                                                    AsyncImage(
+                                                        model = ImageRequest.Builder(LocalContext.current)
+                                                            .data(child.icon)
+                                                            .decoderFactory(SvgDecoder.Factory())
+                                                            .build(),
+                                                        contentDescription = child.name,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                } else {
+                                                    Spacer(modifier = Modifier.size(20.dp))
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                }
+
+                                                Text(
+                                                    text = child.name ?: "Unknown",
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Normal
+                                                    ),
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .padding(end = 8.dp),
+                                                    maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+
+                                                Icon(
+                                                    imageVector = Icons.Filled.KeyboardArrowRight,
+                                                    contentDescription = "Navigate",
+                                                    tint = Color(0xFF1A5276),
                                                     modifier = Modifier.size(20.dp)
                                                 )
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                            } else {
-                                                Spacer(modifier = Modifier.size(20.dp))
-                                                Spacer(modifier = Modifier.width(12.dp))
                                             }
-
-                                            Text(
-                                                text = child.name ?: "Unknown",
-                                                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                                                modifier = Modifier
-                                                    .weight(1f)
-                                                    .padding(end = 8.dp),
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-
-                                            Icon(
-                                                imageVector = Icons.Filled.KeyboardArrowRight,
-                                                contentDescription = "Navigate",
-                                                tint = Color(0xFF1A5276),
-                                                modifier = Modifier.size(20.dp)
-                                            )
                                         }
                                     }
                                 }
@@ -261,100 +292,120 @@ fun NavigationDrawer(
 
         Spacer(modifier = Modifier.weight(1f))
 
-
+        // Add some bottom padding
+        Spacer(modifier = Modifier.height(16.dp))
     }
 
-    // Type Selection Dialog
-    if (showTypeSelection && selectedCategory != null) {
-        AlertDialog(
-            onDismissRequest = {
-                showTypeSelection = false
-                selectedCategory = null
-            },
-            title = {
+    // Type Selection Dropdown
+    if (expandedTypeDropdown && selectedCategory != null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable {
+                    expandedTypeDropdown = false
+                    selectedCategory = null
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .width(250.dp)
+                    .background(Color.White, RoundedCornerShape(12.dp))
+                    .padding(16.dp)
+            ) {
+                // Header
                 Text(
                     text = "Select Content Type",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF254365),
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "Select content type for: ${selectedCategory?.name ?: "Unknown"}",
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
 
+                Text(
+                    text = "Category: ${selectedCategory?.name ?: "Unknown"}",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Dropdown style options
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(8.dp))
+                        .background(Color.White)
+                ) {
                     // Post option
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFE3F2FD))
-                            .border(
-                                width = 1.dp,
-                                color = Color(0xFF2196F3),
-                                shape = RoundedCornerShape(8.dp)
-                            )
+                            .height(48.dp)
                             .clickable {
                                 onItemSelected(selectedCategory?.name ?: "Unknown", "post")
-                                showTypeSelection = false
+                                expandedTypeDropdown = false
                                 selectedCategory = null
                                 onCloseDrawer()
                             }
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
                             text = "သတင်းအသစ်များ",
                             fontSize = 14.sp,
                             color = Color(0xFF2196F3),
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            fontWeight = FontWeight.Medium
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    // Divider
+                    Divider(
+                        color = Color(0xFFE0E0E0),
+                        thickness = 1.dp,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
 
                     // Knowledge option
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFE8F5E8))
-                            .border(
-                                width = 1.dp,
-                                color = Color(0xFF4CAF50),
-                                shape = RoundedCornerShape(8.dp)
-                            )
+                            .height(48.dp)
                             .clickable {
                                 onItemSelected(selectedCategory?.name ?: "Unknown", "knowledge")
-                                showTypeSelection = false
+                                expandedTypeDropdown = false
                                 selectedCategory = null
                                 onCloseDrawer()
                             }
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
                             text = "ဗဟုသုတများ",
                             fontSize = 14.sp,
                             color = Color(0xFF4CAF50),
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
-            },
-            confirmButton = {
+
+                // Cancel button
+                Spacer(modifier = Modifier.height(16.dp))
                 TextButton(
                     onClick = {
-                        showTypeSelection = false
+                        expandedTypeDropdown = false
                         selectedCategory = null
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.Gray
+                    )
                 ) {
-                    Text("Cancel")
+                    Text("Cancel", fontSize = 14.sp)
                 }
             }
-        )
+        }
     }
 }
