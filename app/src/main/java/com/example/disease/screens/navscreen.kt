@@ -141,32 +141,19 @@ fun NavigationDrawer(
                                 contentColor = Color(0xFF254365),
                                 containerColor = Color.Transparent
                             )
-                        ) {
+                        )
+
+
+                        {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxSize()
-                            ) {
-                                if (!category.icon.isNullOrEmpty()) {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(category.icon)
-                                            .decoderFactory(SvgDecoder.Factory())
-                                            .build(),
-                                        contentDescription = category.name,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                } else {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data("file:///android_asset/one.svg")
-                                            .decoderFactory(SvgDecoder.Factory())
-                                            .build(),
-                                        contentDescription = "Default Icon",
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                }
+                            )
+
+
+                            {
+
+
 
                                 Text(
                                     text = category.name ?: "Unknown",
